@@ -1,4 +1,4 @@
-# Custom App Launcher
+# Overture App Launcher
 
 A lightweight, custom application launcher, built using the gpui library.
 
@@ -12,7 +12,7 @@ A lightweight, custom application launcher, built using the gpui library.
 - Built with the `gpui` library
 - Keyboard-driven workflow
 
-> 🚧 This project is under active development.
+> This project is under active development.
 
 ---
 
@@ -27,7 +27,7 @@ A lightweight, custom application launcher, built using the gpui library.
 ### Build from Source
 
 ```bash
-git clone https://github.com/your-username/your-repo-name.git
+git clone https://github.com/Gladdstone/overture.git
 cd your-repo-name
 cargo build --release
 
