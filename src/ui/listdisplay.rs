@@ -12,12 +12,11 @@ use gpui_component::{
     label::Label,
     list::{ListDelegate, ListItem, ListState},
 };
-use crate::AppState;
+use crate::ui::appstate::AppState;
 
 
 pub struct ListDisplay {
     pub appstate: Rc<RefCell<Entity<AppState>>>,
-    pub selected_index: Option<IndexPath>,
 }
 
 impl ListDelegate for ListDisplay {
@@ -36,7 +35,7 @@ impl ListDelegate for ListDisplay {
         self.appstate.borrow().read(_cx).application_vec.get(ix.row).map(|item| {
             ListItem::new(ix)
                 .child(Label::new(item))
-                .selected(Some(ix) == self.selected_index)
+                .selected(Some(ix) == self.appstate.borrow().read(_cx).selected_index)
         })
     }
 
@@ -46,7 +45,9 @@ impl ListDelegate for ListDisplay {
         _window: &mut Window,
         cx: &mut Context<ListState<ListDisplay>>,
     ) {
-        self.selected_index = ix;
+        self.appstate.borrow_mut().update(cx, |state, _cx| {
+            state.selected_index = ix;
+        });
         cx.notify();
     }
 

@@ -21,10 +21,11 @@ use gpui_component::{
 };
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
-use crate::AppState;
+use crate::ui::appstate::AppState;
 
 
 pub struct SearchBar {
+    appstate: Rc<RefCell<Entity<AppState>>>,
     input_state: Entity<InputState>,
     search_text: SharedString,
     _subscriptions: Vec<Subscription>,
@@ -38,7 +39,7 @@ struct SearchEvent {
 impl EventEmitter<SearchEvent> for SearchBar {}
 
 impl SearchBar {
-    pub fn new(window: &mut Window, cx: &mut Context<Self>, application_vec: Rc<RefCell<Entity<AppState>>>) -> Self {
+    pub fn new(window: &mut Window, cx: &mut Context<Self>, appstate: Rc<RefCell<Entity<AppState>>>) -> Self {
         let input_state = cx.new(|cx| InputState::new(window, cx).placeholder("Search"));
         let output = Command::new("ls")
             .arg("/Applications")
@@ -50,42 +51,72 @@ impl SearchBar {
         let working_vec: Vec<String> = String::from_utf8_lossy(&output.stdout).split("\n").map(|x| x.to_string()).collect();
 
         let _subscriptions = vec![cx.subscribe_in(&input_state, window, {
-            let input_state = input_state.clone();
-            move |this, _, ev: &InputEvent, _window, cx| match ev {
-                InputEvent::Change => {
-                    this.search_text = input_state.read(cx).value();
+        let input_state = input_state.clone();
+        let working_vec = working_vec.clone();
 
-                    let mut apps_mut = working_vec.clone();
-                    let mut result: Vec<(i64, &String)> = apps_mut
-                        .iter()
-                        .filter_map(|item| {
-                            matcher
-                                .fuzzy_match(item, &this.search_text.as_str())
-                                .map(|score| (score, item))
-                        })
-                        .collect();
-
-                    result.sort_unstable_by(|a, b| b.0.cmp(&a.0));
-                    let top_n: Vec<String> = result.into_iter().take(3).map(|(_num, s)| s.to_string()).collect();
-
-                    println!("{:?}", top_n);
-                    for value in 0..top_n.len() {
-                        apps_mut[value] = top_n[value].clone();
-                    }
-                    application_vec.borrow_mut().write(cx, AppState{ application_vec: apps_mut });
-                }
-                _ => {}
+        move |this, _, ev: &InputEvent, _window, cx| {
+            if let InputEvent::Change = ev {
+                this.handle_input_change(
+                    cx,
+                    &input_state,
+                    &working_vec,
+                    &matcher,
+                );
             }
+        }
         })];
 
         Self {
+            appstate: appstate,
             input_state: input_state,
             search_text: SharedString::default(),
-            // appstate: application_vec,
             _subscriptions: _subscriptions,
             focus_handle: cx.focus_handle(),
         }
     }
+
+    fn handle_input_change(
+        &mut self,
+        cx: &mut Context<Self>,
+        input_state: &Entity<InputState>,
+        working_vec: &[String],
+        matcher: &SkimMatcherV2,
+    ) {
+        self.search_text = input_state.read(cx).value();
+
+        let mut apps_mut = working_vec.to_vec();
+
+        let mut result: Vec<(i64, &String)> = apps_mut
+            .iter()
+            .filter_map(|item| {
+                matcher
+                    .fuzzy_match(item, self.search_text.as_str())
+                    .map(|score| (score, item))
+            })
+            .collect();
+
+        result.sort_unstable_by(|a, b| b.0.cmp(&a.0));
+
+        let top_n: Vec<String> = result
+            .into_iter()
+            .take(3)
+            .map(|(_, s)| s.to_string())
+            .collect();
+
+        println!("{:?}", top_n);
+
+        for (i, value) in top_n.iter().enumerate() {
+            apps_mut[i] = value.clone();
+        }
+
+        self.appstate
+            .borrow_mut()
+            .write(cx, AppState {
+                selected_index: None,
+                application_vec: apps_mut,
+            });
+    }
+
 
 }
 
