@@ -28,6 +28,6 @@ A lightweight, custom application launcher, built using the gpui library.
 
 ```bash
 git clone https://github.com/Gladdstone/overture.git
-cd your-repo-name
+cd overture
 cargo build --release
 
