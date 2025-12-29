@@ -1,4 +1,3 @@
-use std::process::Command;
 use std::rc::Rc;
 use std::cell::RefCell;
 use gpui::{
@@ -21,6 +20,7 @@ use gpui_component::{
 };
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
+use crate::core::{ AppItem, collect_apps };
 use crate::ui::appstate::AppState;
 
 
@@ -41,25 +41,17 @@ impl EventEmitter<SearchEvent> for SearchBar {}
 impl SearchBar {
     pub fn new(window: &mut Window, cx: &mut Context<Self>, appstate: Rc<RefCell<Entity<AppState>>>) -> Self {
         let input_state = cx.new(|cx| InputState::new(window, cx).placeholder("Search"));
-        let output = Command::new("ls")
-            .arg("/Applications")
-            .output()
-            .expect("failed to execute ls");
 
         let matcher = SkimMatcherV2::default();
 
-        let working_vec: Vec<String> = String::from_utf8_lossy(&output.stdout).split("\n").map(|x| x.to_string()).collect();
-
         let _subscriptions = vec![cx.subscribe_in(&input_state, window, {
         let input_state = input_state.clone();
-        let working_vec = working_vec.clone();
 
         move |this, _, ev: &InputEvent, _window, cx| {
             if let InputEvent::Change = ev {
                 this.handle_input_change(
                     cx,
                     &input_state,
-                    &working_vec,
                     &matcher,
                 );
             }
@@ -79,41 +71,36 @@ impl SearchBar {
         &mut self,
         cx: &mut Context<Self>,
         input_state: &Entity<InputState>,
-        working_vec: &[String],
         matcher: &SkimMatcherV2,
     ) {
         self.search_text = input_state.read(cx).value();
 
-        let mut apps_mut = working_vec.to_vec();
+        let mut app_vec = collect_apps();
 
-        let mut result: Vec<(i64, &String)> = apps_mut
+        let mut result: Vec<(i64, &AppItem)> = app_vec
             .iter()
             .filter_map(|item| {
                 matcher
-                    .fuzzy_match(item, self.search_text.as_str())
+                    .fuzzy_match(&item.name, self.search_text.as_str())
                     .map(|score| (score, item))
             })
             .collect();
 
         result.sort_unstable_by(|a, b| b.0.cmp(&a.0));
 
-        let top_n: Vec<String> = result
+        let top_n: Vec<AppItem> = result
             .into_iter()
             .take(3)
-            .map(|(_, s)| s.to_string())
+            .map(|(_, s)| s.clone())
             .collect();
 
         println!("{:?}", top_n);
-
-        for (i, value) in top_n.iter().enumerate() {
-            apps_mut[i] = value.clone();
-        }
 
         self.appstate
             .borrow_mut()
             .write(cx, AppState {
                 selected_index: None,
-                application_vec: apps_mut,
+                application_vec: top_n,
             });
     }
 

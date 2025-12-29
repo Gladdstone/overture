@@ -10,6 +10,7 @@ use gpui_component::{
     Root,
 };
 
+mod core;
 mod ui;
 mod window;
 
