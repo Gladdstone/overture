@@ -30,4 +30,11 @@ A lightweight, custom application launcher, built using the gpui library.
 git clone https://github.com/Gladdstone/overture.git
 cd overture
 cargo build --release
-
+```
+Currently the application must be initialized with the following terminal command in order to invoke the dbus show method:
+```bash
+gdbus call --session \
+  --dest org.example.App \
+  --object-path /org/example/App \
+  --method org.example.App.Show
+```
