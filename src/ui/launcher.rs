@@ -43,11 +43,11 @@ impl Launcher {
         }
     }
 
-    fn cancel(&mut self, _: &Cancel, window: &mut Window, cx: &mut Context<Self>) {
+    fn cancel(&mut self, _: &Cancel, _window: &mut Window, cx: &mut Context<Self>) {
        println!("hide window"); 
     }
 
-    fn confirm(&mut self, _: &Confirm, window: &mut Window, cx: &mut Context<Self>) {
+    fn confirm(&mut self, _: &Confirm, _window: &mut Window, cx: &mut Context<Self>) {
         println!("");
     }
 }

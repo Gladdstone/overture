@@ -68,8 +68,8 @@ fn collect_apps_mac() -> Vec<AppItem> {
                 let path = entry.path();
                 if path.extension().and_then(|e| e.to_str()) == Some("app") {
                     let plist_path = path.join("Contents/Info.plist");
-                    if let Ok(plist_file) = fs::File::open(&plist_path) {
-                        if let Ok(plist) = Value::from_reader(plist_file) {
+                    if let Ok(plist_file) = fs::File::open(&plist_path) &&
+                        let Ok(plist) = Value::from_reader(plist_file) {
                             let dict = plist.as_dictionary().unwrap();
                             let name = dict.get("CFBundleName")
                                 .or_else(|| dict.get("CFBundleDisplayName"))
@@ -98,7 +98,7 @@ fn collect_apps_mac() -> Vec<AppItem> {
                                 _path: path.clone(),
                             });
                         }
-                    }
+                    
                 }
             }
         }

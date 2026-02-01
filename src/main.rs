@@ -1,9 +1,5 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use gpui::{
     App,
-    AsyncApp,
-    AppContext,
     Application,
     WindowHandle,
 };
@@ -17,8 +13,8 @@ mod core;
 mod ui;
 mod window;
 
-use crate::ui::{ AppState, init, Launcher, ListDisplay, SearchBar };
-use crate::window::{ Command, create_window, IpcEvent, run_dbus };
+use crate::ui::{ AppState, Launcher, ListDisplay, SearchBar };
+use crate::window::{ Command, IpcEvent, run_dbus };
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,24 +22,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
+        // let _ = rt.block_on(run_dbus(tx)).expect("Failed to establish a connection to dbus");
         rt.block_on(run_dbus(tx)).unwrap();
     });
 
     Application::new().run(|cx: &mut App| {
         gpui_component::init(cx);
 
-        let (tx, mut rx) = mpsc::channel::<IpcEvent>(32);
+        // let (_tx, mut rx) = mpsc::channel::<IpcEvent>(32);
         let mut launcher: Option<WindowHandle<Root>> = None;
         let mut visible = false;
 
+        println!("running...");
         cx.spawn(async move |cx| {
             while let Some(event) = rx.recv().await {
+                println!("listening...");
+                println!("{:?}", event);
                 match event {
-                    IpcEvent::CommandEvent(Command::RequestHide) if visible => {
-                        println!("hide");
-                    }
+                    // IpcEvent::CommandEvent(Command::RequestHide) if visible => {
+                    //     println!("hide");
+                    // }
 
-                    IpcEvent::Show { response_tx } => {
+                    Command::Show { .. } => {
                         let result = if !visible {
                             match window::create_window(cx) {
                                 Ok(windowhandle) => {

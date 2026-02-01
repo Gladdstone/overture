@@ -4,6 +4,7 @@ use zbus::connection::Builder;
 use tokio::sync::{mpsc, oneshot};
 
 
+#[derive(Debug)]
 pub enum Command {
     Show,
     RequestHide,
@@ -11,6 +12,7 @@ pub enum Command {
 
 pub type IpcResponse = Result<(), String>;
 
+#[derive(Debug)]
 pub enum IpcEvent {
     CommandEvent(Command),
 
@@ -33,11 +35,16 @@ struct DbusApp {
 
 #[interface(name = "org.example.App")]
 impl DbusApp {
+    fn ping(&self) -> &str {
+        "pong"
+    }
+
     fn show(&self) {
         let _ = self.tx.send(Command::Show);
     }
 }
 
+// pub async fn run_dbus(tx: mpsc::UnboundedSender<Command>) -> zbus::Result<zbus::Connection> {
 pub async fn run_dbus(tx: mpsc::UnboundedSender<Command>) -> zbus::Result<()> {
     let app = DbusApp { tx };
 
@@ -49,5 +56,6 @@ pub async fn run_dbus(tx: mpsc::UnboundedSender<Command>) -> zbus::Result<()> {
 
     future::pending::<()>().await;
     Ok(())
+    // return Ok(connection)
 }
 
