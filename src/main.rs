@@ -39,9 +39,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("listening...");
                 println!("{:?}", event);
                 match event {
-                    // IpcEvent::CommandEvent(Command::RequestHide) if visible => {
-                    //     println!("hide");
-                    // }
+                    Command::RequestHide { .. } => {
+                        if visible {
+                            if let Some(window) = launcher.as_ref() {
+                                let _ = window.update(cx, |root, window, cx| {
+                                    let _ = window.remove_window();
+                                });
+                            } 
+                            visible = false;
+                        } else {
+                            println!("already hidden");
+                        }
+                    }
 
                     Command::Show { .. } => {
                         let result = if !visible {

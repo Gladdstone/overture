@@ -42,6 +42,10 @@ impl DbusApp {
     fn show(&self) {
         let _ = self.tx.send(Command::Show);
     }
+
+    fn hide(&self) {
+        let _ = self.tx.send(Command::RequestHide);
+    }
 }
 
 // pub async fn run_dbus(tx: mpsc::UnboundedSender<Command>) -> zbus::Result<zbus::Connection> {
