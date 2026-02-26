@@ -34,7 +34,7 @@ pub fn init_bounds(cx: &mut AsyncApp) -> Option<WindowOptions> {
     // let window_origin = point(display_size.width * 0.1, display_size.height * 0.2);
     let fullscreen_bounds = Bounds {
         origin: point(gpui::Pixels::from(0.0), gpui::Pixels::from(0.0)),
-        size: Size::new(gpui::Pixels::from(1920.0), gpui::Pixels::from(1080.0)),
+        size: Size::new(gpui::Pixels::from(800.0), gpui::Pixels::from(200.0)),
     };
     let options = WindowOptions {
         window_bounds: Some(WindowBounds::Windowed(fullscreen_bounds)),
